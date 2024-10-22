@@ -1,4 +1,3 @@
-# 修改后版本
 import random
 import gym
 import numpy as np
@@ -19,7 +18,7 @@ class ReplayBuffer:
 
     def sample(self, batch_size):  # 从buffer中采样数据,数量为batch_size
         transitions = random.sample(self.buffer, batch_size)
-        state, action, reward, next_state, done = zip(*transitions)
+        state, action, reward, next_state, done = zip(*transitions)# 返回结果是元组
         return np.array(state), action, reward, np.array(next_state), done
 
     def size(self):  # 目前buffer中数据的数量
@@ -60,7 +59,7 @@ class DQN:
             action = np.random.randint(self.action_dim)
         else:
             state = torch.tensor([state], dtype=torch.float).to(self.device)
-            action = self.q_net(state).argmax().item()
+            action = self.q_net(state).argmax().item()# 取使得Q最大的那个动作
         return action
 
     def update(self, transition_dict):
@@ -75,8 +74,9 @@ class DQN:
         dones = torch.tensor(transition_dict['dones'],
                              dtype=torch.float).view(-1, 1).to(self.device)
 
-        q_values = self.q_net(states).gather(1, actions)  # Q值
-        # 下个状态的最大Q值
+        q_values = self.q_net(states).gather(1, actions)  # 取Q值（较大的那个）如[0.0509,-0.1915]取0.05095
+        # self.target_q_net(next_states)输出的维度是(batch_size, num_actions)
+        # 下个状态的最大Q值 （.max(1)表示在第 1 维（即动作维度，num_actions）上进行最大值选择）
         max_next_q_values = self.target_q_net(next_states).max(1)[0].view(
             -1, 1)
         q_targets = rewards + self.gamma * max_next_q_values * (1 - dones
@@ -97,7 +97,7 @@ hidden_dim = 128
 gamma = 0.98
 epsilon = 0.01
 target_update = 10
-buffer_size = 10000
+buffer_size = 10000 # buffer容量
 minimal_size = 500
 batch_size = 64
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device(
